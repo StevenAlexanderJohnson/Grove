@@ -29,17 +29,16 @@ func main() {
 				next.ServeHTTP(w, r.WithContext(tokenContext))
 			})
 		}).
-		UseMiddleware(grove.DefaultRequestLoggerMiddleware(logger)).
 		AddController(&PrivateController{})
 
 	publicScope := grove.
 		NewScope().
-		UseMiddleware(grove.DefaultRequestLoggerMiddleware(logger)).
 		AddController(&PublicController{})
 
 	app := grove.
 		NewApp().
 		WithPort("8080").
+		WithMiddleware(grove.DefaultRequestLoggerMiddleware(logger)).
 		WithScope("/", publicScope).
 		WithScope("/private/", authScope)
 
