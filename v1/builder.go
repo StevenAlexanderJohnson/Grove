@@ -31,6 +31,21 @@ func (app *App) WithMiddleware(mw Middleware) *App {
 	return app
 }
 
+func (app *App) WithRoute(path string, handler http.Handler) *App {
+	if path == "" || path[0] != '/' {
+		path = "/" + path
+	}
+	if path[len(path)-1] != '/' {
+		path += "/"
+	}
+	if handler == nil {
+		app.logger.Warning("Warning: Attempting to register a nil handler at", path)
+		return app
+	}
+	app.mux.Handle(path, http.StripPrefix(path[:len(path)-1], handler))
+	return app
+}
+
 func (app *App) WithDependencies(deps *Dependencies) *App {
 	app.deps = deps
 	return app
