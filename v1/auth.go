@@ -23,6 +23,16 @@ type AuthenticatorConfig struct {
 	Key           string
 }
 
+func NewAuthenticatorConfig(jwePrivateKey *rsa.PrivateKey, lifetime time.Duration, issuer string, audience []string, key string) *AuthenticatorConfig {
+	return &AuthenticatorConfig{
+		JWEPrivateKey: jwePrivateKey,
+		Lifetime:      lifetime,
+		Issuer:        issuer,
+		Audience:      audience,
+		Key:           key,
+	}
+}
+
 func (config *AuthenticatorConfig) Validate() error {
 	if config.JWEPrivateKey == nil {
 		return fmt.Errorf("JWEPrivateKey is required")
@@ -42,7 +52,7 @@ func (config *AuthenticatorConfig) Validate() error {
 	return nil
 }
 
-func NewAuthenticatorConfig() (*AuthenticatorConfig, error) {
+func LoadAuthenticatorConfigFromEnv() (*AuthenticatorConfig, error) {
 	jwePem, err := os.ReadFile(os.Getenv("JWT_PRIVATE_KEY_PATH"))
 	if err != nil {
 		return nil, fmt.Errorf("an error occurred while reading JWE private key: %v", err)

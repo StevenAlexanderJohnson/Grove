@@ -21,7 +21,7 @@ func main() {
 	os.Setenv("JWT_AUDIENCE", "example.com")
 	os.Setenv("JWT_SECRET", "super_secret_key")
 
-	authConfig, err := grove.NewAuthenticatorConfig()
+	authConfig, err := grove.LoadAuthenticatorConfigFromEnv()
 	if err != nil {
 		panic(err)
 	}
