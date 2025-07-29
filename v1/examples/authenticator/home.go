@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/StevenAlexanderJohnson/grove"
+	"github.com/StevenAlexanderJohnson/grove/v1"
 	"github.com/golang-jwt/jwt/v5"
 )
 

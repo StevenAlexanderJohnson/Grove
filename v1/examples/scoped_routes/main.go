@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/StevenAlexanderJohnson/grove"
+	"github.com/StevenAlexanderJohnson/grove/v1"
 )
 
 func main() {
