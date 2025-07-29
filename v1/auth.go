@@ -101,13 +101,7 @@ func LoadAuthenticatorConfigFromEnv() (*AuthenticatorConfig, error) {
 		return nil, fmt.Errorf("JWT_SECRET was not set")
 	}
 
-	jwtConfig := &AuthenticatorConfig{
-		Lifetime:      time.Duration(2 * time.Minute),
-		Issuer:        issuer,
-		Audience:      audience,
-		Key:           jwtSecret,
-		JWEPrivateKey: rsaKey,
-	}
+	jwtConfig := NewAuthenticatorConfig(rsaKey, lifetime, issuer, audience, jwtSecret)
 
 	return jwtConfig, nil
 
