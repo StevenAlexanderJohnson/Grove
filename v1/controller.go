@@ -11,3 +11,5 @@ type IController interface {
 	// It is called by the Grove application to set up the HTTP routes for the controller.
 	RegisterRoutes(mux *http.ServeMux)
 }
+
+type ControllerFactory func(*Dependencies) IController

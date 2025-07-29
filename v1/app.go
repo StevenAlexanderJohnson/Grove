@@ -20,10 +20,16 @@ func NewApp() *App {
 	}
 }
 
+// ServeHTTP implements the http.Handler interface.
+// It allows the App to be used as a handler in an HTTP server.
+// It delegates the request handling to the ServeMux.
 func (app *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	app.mux.ServeHTTP(w, r)
 }
 
+// Run starts to listen the HTTP server on the specified port.
+// It applies all registered middleware to the handler.
+// It returns an error if the server fails to start.
 func (app *App) Run() error {
 	app.logger.Info("Starting server on port", app.port)
 	addr := ":" + app.port
