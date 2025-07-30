@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/StevenAlexanderJohnson/grove/v1"
+	"github.com/StevenAlexanderJohnson/grove"
 	"github.com/golang-jwt/jwt/v5"
 )
 
