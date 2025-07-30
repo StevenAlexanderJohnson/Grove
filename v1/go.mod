@@ -1,4 +1,4 @@
-module github.com/StevenAlexanderJohnson/grove
+module github.com/StevenAlexanderJohnson/grove/v1
 
 go 1.23.6
 
