@@ -10,12 +10,12 @@ type App struct {
 	deps       *Dependencies
 }
 
-func NewApp() *App {
+func NewApp(appName string) *App {
 	return &App{
 		port:       "8080",
 		mux:        http.NewServeMux(),
 		middleware: []Middleware{},
-		logger:     NewDefaultLogger(),
+		logger:     NewDefaultLogger(appName),
 		deps:       NewDependencies(),
 	}
 }

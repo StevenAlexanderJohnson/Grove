@@ -46,8 +46,8 @@ func (app *App) WithPort(port string) *App {
 // This method allows the application to use a custom logger for logging messages.
 func (app *App) WithLogger(logger ILogger) *App {
 	if logger == nil {
-		app.logger.Warning("Warning: Attempting to set a nil logger, using default logger")
-		logger = NewDefaultLogger()
+		app.logger.Warning("Warning: Attempting to set a nil logger, no changes applied")
+		return app
 	}
 	app.logger = logger
 	return app

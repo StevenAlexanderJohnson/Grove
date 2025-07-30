@@ -77,8 +77,8 @@ func (l *DefaultLogger) Fatalf(format string, v ...interface{}) {
 	os.Exit(1)
 }
 
-func NewDefaultLogger() ILogger {
+func NewDefaultLogger(appName string) ILogger {
 	return &DefaultLogger{
-		logger: log.New(os.Stdout, "grove: ", log.LstdFlags),
+		logger: log.New(os.Stdout, appName+": ", log.LstdFlags),
 	}
 }
