@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/StevenAlexanderJohnson/grove/v1"
+	"github.com/StevenAlexanderJohnson/grove"
 )
 
 type PrivateController struct{}

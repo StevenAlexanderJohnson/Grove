@@ -3,7 +3,7 @@ package main
 import (
 	"net/http"
 
-	"github.com/StevenAlexanderJohnson/grove/v1"
+	"github.com/StevenAlexanderJohnson/grove"
 )
 
 type HomeController struct {

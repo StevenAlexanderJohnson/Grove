@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/StevenAlexanderJohnson/grove/v1"
+	"github.com/StevenAlexanderJohnson/grove"
 )
 
 func main() {
