@@ -2,7 +2,7 @@ module template
 
 go 1.23.6
 
-require github.com/StevenAlexanderJohnson/grove v1.0.1
+require github.com/StevenAlexanderJohnson/grove v0.0.1
 
 require (
 	github.com/go-jose/go-jose/v4 v4.1.1 // indirect
