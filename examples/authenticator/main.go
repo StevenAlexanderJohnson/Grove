@@ -30,7 +30,7 @@ func main() {
 	}
 	authenticator := grove.NewAuthenticator[*CustomClaims](authConfig)
 
-	logger := grove.NewDefaultLogger()
+	logger := grove.NewDefaultLogger("authenticator")
 
 	authScope := grove.
 		NewScope().
@@ -42,7 +42,7 @@ func main() {
 		AddController(&PrivateController{})
 
 	if err := grove.
-		NewApp().
+		NewApp("authenticator").
 		WithScope("/private/", authScope).
 		WithController(NewHomeController(authenticator, logger)).
 		WithPort("8080").

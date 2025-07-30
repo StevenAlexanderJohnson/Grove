@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	logger := grove.NewDefaultLogger()
+	logger := grove.NewDefaultLogger("scoped_routes")
 
 	authScope := grove.
 		NewScope().
@@ -36,7 +36,7 @@ func main() {
 		AddController(&PublicController{})
 
 	app := grove.
-		NewApp().
+		NewApp("scoped_routes").
 		WithPort("8080").
 		WithMiddleware(grove.DefaultRequestLoggerMiddleware(logger)).
 		WithScope("/", publicScope).

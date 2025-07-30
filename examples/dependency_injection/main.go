@@ -15,7 +15,7 @@ func main() {
 	deps.Set(namesKey, names)
 
 	app := grove.
-		NewApp().
+		NewApp("dependency-injection").
 		WithPort("8080").
 		WithDependencies(deps).
 		WithControllerFactory(func(dependencies *grove.Dependencies) grove.IController {
