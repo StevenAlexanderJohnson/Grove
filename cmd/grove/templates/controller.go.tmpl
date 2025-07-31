@@ -1,0 +1,54 @@
+package {{.Package}}
+
+import (
+    "errors"
+    "{{.ProjectName}}/internal/models"
+    "{{.ProjectName}}/internal/repositories"
+    "{{.ProjectName}}/internal/services"
+)
+
+type {{.ResourceName}}Controller struct {
+    service *{{.ResourceName}}Service
+}
+
+func New{{.ResourceName}}Controller(service *{{.ResourceName}}Service) *{{.ResourceName}}Controller {
+    return &{{.ResourceName}}Controller{
+        service: service,
+    }
+}
+
+func (c *{{.ResourceName}}Controller) Create(data *{{.ResourceName}}) (*{{.ResourceName}}, error) {
+    newData, err := c.service.Create(data)
+    if err != nil {
+        return nil, err
+    }
+    return newData, nil
+}
+
+func (c *{{.ResourceName}}Controller) GetAll() ([]{{.ResourceName}}, error) {
+    items, err := c.service.GetAll()
+    if err != nil {
+        return nil, err
+    }
+    return items, nil
+}
+
+func (c *{{.ResourceName}}Controller) GetByID(id int) (*{{.ResourceName}}, error) {
+    item, err := c.service.GetByID(id)
+    if err != nil {
+        return nil, err
+    }
+    return item, nil
+}
+
+func (c *{{.ResourceName}}Controller) Update(id int, data *{{.ResourceName}}) (*{{.ResourceName}}, error) {
+    updatedData, err := c.service.Update(id, data)
+    if err != nil {
+        return nil, err
+    }
+    return updatedData, nil
+}
+
+func (c *{{.ResourceName}}Controller) Delete(id int) error {
+    return c.service.Delete(id)
+}

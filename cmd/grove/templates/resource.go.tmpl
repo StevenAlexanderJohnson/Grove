@@ -1,0 +1,16 @@
+package resources
+
+type {{.ResourceName}} struct {
+    ID int
+    {{- range $key, $value := .ResourceFields}}
+    {{$key}} {{$value}}
+    {{- end}}
+}
+
+{{- range $key, $value := .ResourceFields}}
+{{- if isPrivate $key}}
+func (r *{{$.ResourceName}}) Get{{$key | capitalize}}() {{$value}} {
+    return r.{{$key}}
+}
+{{- end}}
+{{- end}}
