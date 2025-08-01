@@ -40,6 +40,19 @@ func (app *App) Run() error {
 	return http.ListenAndServe(addr, handler)
 }
 
+// WithMux sets the ServeMux for the application.
+// If the provided mux is nil, it logs a warning and uses the existing mux.
+// This method allows the application to use a custom ServeMux for routing.
+// A default mux which is a simple http.ServeMux is created when the app is initialized.
+func (app *App) WithMux(mux *http.ServeMux) *App {
+	if mux == nil {
+		app.logger.Warning("Warning: Attempting to set a nil ServeMux, using existing mux")
+		return app
+	}
+	app.mux = mux
+	return app
+}
+
 // WithController registers a controller with the application.
 // It calls the RegisterRoutes method of the controller to set up its routes.
 // If the controller is nil, it logs an error and does not register it.

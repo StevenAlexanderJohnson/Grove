@@ -69,7 +69,7 @@ Grove is designed to be simple, explicit, and unopinionated. You are encouraged 
 - **Middleware:** Middleware is just a function type. You can compose, chain, and write your own. Grove provides helpers, but you are free to implement your own logic.
 - **Dependency Injection:** Grove includes a simple DI container for wiring dependencies, but you can use your own patterns if you prefer.
 - **Logging:** Grove provides a pluggable logger interface. You can use the default logger or bring your own.
-- **Authentication:** Secure JWT authentication is available, but you can opt out or replace it.
+- **Authentication:** Secure JWE authentication is available, but you can opt out or replace it.
 
 ### Examples
 
