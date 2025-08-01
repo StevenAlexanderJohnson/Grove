@@ -30,13 +30,13 @@ Grove is ideal for developers who want a pragmatic starting point for Go web app
 To add Grove to your project, run:
 
 ```sh
-go get github.com/StevenAlexanderJohnson/grove@v1.0.0
+go get github.com/StevenAlexanderJohnson/grove@v0
 ```
 
 Then, import Grove in your Go code:
 
 ```go
-import "github.com/StevenAlexanderJohnson/v1"
+import "github.com/StevenAlexanderJohnson/grove"
 ```
 
 ### Basic Use
@@ -44,7 +44,7 @@ import "github.com/StevenAlexanderJohnson/v1"
 Once you've added Grove to your project, you can build APIs using the `Builder Pattern` methods provided, or just use the defaults.
 
 ```go
-import "github.com/StevenAlexanderJohnson/v1"
+import "github.com/StevenAlexanderJohnson/grove"
 
 func main() {
 	if err := grove.
@@ -57,9 +57,35 @@ func main() {
 }
 ```
 
+
 ## Documentation
 
-_Coming soon..._
+Grove is designed to be simple, explicit, and unopinionated. You are encouraged to read the source code and the examples provided in the `examples/` directory for real-world usage patterns.
+
+### Key Concepts
+
+- **Bootstrapping:** Grove helps you set up your project structure and common files, but does not hide or abstract your application logic.
+- **Routing & Scopes:** Use `WithRoute` and `WithScope` to register handlers and organize your routes. Scopes can have their own middleware chains.
+- **Middleware:** Middleware is just a function type. You can compose, chain, and write your own. Grove provides helpers, but you are free to implement your own logic.
+- **Dependency Injection:** Grove includes a simple DI container for wiring dependencies, but you can use your own patterns if you prefer.
+- **Logging:** Grove provides a pluggable logger interface. You can use the default logger or bring your own.
+- **Authentication:** Secure JWT authentication is available, but you can opt out or replace it.
+
+### Examples
+
+See the [`examples/`](./examples/) directory for:
+- Basic app setup
+- Scoped routes
+- Dependency injection
+- Authentication
+
+### Philosophy
+
+Grove does not enforce strict conventions or hide details. You are always in control of your application’s structure and logic. The framework’s goal is to reduce boilerplate and help you get started, not to lock you in.
+
+### API Reference
+
+Full API documentation is coming soon. For now, refer to the GoDoc comments in the source code and the examples for usage guidance.
 
 ## License
 
