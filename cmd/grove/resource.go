@@ -9,8 +9,8 @@ import (
 	"text/template"
 )
 
-//go:embed templates/resource.go.tmpl
-var resourceTemplate string
+//go:embed templates/model.go.tmpl
+var modelTemplate string
 
 func capitalize(s string) string {
 	if len(s) == 0 {
@@ -34,31 +34,6 @@ func resourceHelp() {
 	println("This command creates a new resource for Grove project management.")
 }
 
-func createResource(resourcePath string, templateData map[string]interface{}) error {
-	tmpl, err := template.
-		New("resource").
-		Funcs(template.FuncMap{
-			"isPrivate":  isPrivate,
-			"capitalize": capitalize,
-		}).
-		Parse(resourceTemplate)
-	if err != nil {
-		return err
-	}
-
-	file, err := os.Create(resourcePath)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	if err := tmpl.Execute(file, templateData); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func createRepo(resourceName string, moduleName string) error {
 	return fmt.Errorf("not implemented")
 }
@@ -76,6 +51,8 @@ func parseResourceFields(args []string) map[string]string {
 	return fields
 }
 
+// Gets the module name from go.mod
+// Returns an error if go.mod does not exist or is not formatted correctly.
 func getModuleName() (string, error) {
 	if _, err := os.Stat("go.mod"); os.IsNotExist(err) {
 		println("Error: This command must be run in a Grove project directory with a go.mod file.")
@@ -106,8 +83,38 @@ func getModuleName() (string, error) {
 	return moduleName, nil
 }
 
+// Creates the model file for the resource.
+func createModel(resourceName string, fields map[string]string) error {
+	resourcePath := "internal/models/" + resourceName + ".go"
+	templateData := map[string]interface{}{
+		"ResourceName":   resourceName,
+		"ResourceFields": fields,
+	}
+
+	tmpl, err := template.New("model").Parse(modelTemplate)
+	if err != nil {
+		return fmt.Errorf("failed to parse model template: %w", err)
+	}
+	modelFile, err := os.Create(resourcePath)
+	if err != nil {
+		return fmt.Errorf("failed to create model file: %w", err)
+	}
+	defer modelFile.Close()
+
+	if err := tmpl.Execute(modelFile, templateData); err != nil {
+		return fmt.Errorf("failed to execute model template: %w", err)
+	}
+	println("Model created successfully at", resourcePath)
+
+	return nil
+}
+
 func handleCreateResourceCommand(args []string, noRepo bool) {
 	if len(args) < 2 {
+		resourceHelp()
+		return
+	}
+	if (args[0] == "help" || args[0] == "--help") && len(args) == 1 {
 		resourceHelp()
 		return
 	}
@@ -119,14 +126,8 @@ func handleCreateResourceCommand(args []string, noRepo bool) {
 	}
 
 	resourceName := args[0]
-	resourcePath := "resources/" + resourceName + ".go"
 
-	templateData := map[string]interface{}{
-		"ResourceName":   resourceName,
-		"ResourceFields": parseResourceFields(args[1:]),
-	}
-
-	if err := createResource(resourcePath, templateData); err != nil {
+	if err := createModel(resourceName, parseResourceFields(args[1:])); err != nil {
 		println("Error creating resource:", err.Error())
 		return
 	}
@@ -136,6 +137,4 @@ func handleCreateResourceCommand(args []string, noRepo bool) {
 
 		}
 	}
-
-	println("Resource created successfully at", resourcePath)
 }
