@@ -19,11 +19,11 @@ func New{{.ResourceName}}Controller(service *services.{{.ResourceName}}Service) 
 }
 
 func (c *{{.ResourceName}}Controller) RegisterRoutes(mux *http.ServeMux) {
-    mux.HandleFunc("POST /{{.ResourceName}}", c.Create)
-    mux.HandleFunc("GET /{{.ResourceName}}", c.GetAll)
-    mux.HandleFunc("GET /{{.ResourceName}}/{id}", c.GetByID)
-    mux.HandleFunc("PUT /{{.ResourceName}}/{id}", c.Update)
-    mux.HandleFunc("DELETE /{{.ResourceName}}/{id}", c.Delete)
+    mux.HandleFunc("POST /{{.ResourceName | toLower}}", c.Create)
+    mux.HandleFunc("GET /{{.ResourceName | toLower}}", c.GetAll)
+    mux.HandleFunc("GET /{{.ResourceName | toLower}}/{id}", c.GetByID)
+    mux.HandleFunc("PUT /{{.ResourceName | toLower}}/{id}", c.Update)
+    mux.HandleFunc("DELETE /{{.ResourceName | toLower}}/{id}", c.Delete)
 }
 
 func (c *{{.ResourceName}}Controller) Create(w http.ResponseWriter, r *http.Request) {

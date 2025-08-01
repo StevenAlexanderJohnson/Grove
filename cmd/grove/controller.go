@@ -3,6 +3,7 @@ package main
 import (
 	_ "embed"
 	"os"
+	"strings"
 	"text/template"
 )
 
@@ -24,7 +25,12 @@ func createController(resourceName string) error {
 		"ResourceName": resourceName,
 	}
 
-	tmpl, err := template.New("controller").Parse(controllerTemplate)
+	tmpl, err := template.
+		New("controller").
+		Funcs(template.FuncMap{
+			"toLower": strings.ToLower,
+		}).
+		Parse(controllerTemplate)
 	if err != nil {
 		return err
 	}
