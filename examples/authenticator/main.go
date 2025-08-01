@@ -34,12 +34,12 @@ func main() {
 
 	authScope := grove.
 		NewScope().
-		UseMiddleware(grove.DefaultAuthMiddleware(
+		WithMiddleware(grove.DefaultAuthMiddleware(
 			authenticator,
 			logger,
 			func() *CustomClaims { return &CustomClaims{} },
 		)).
-		AddController(&PrivateController{})
+		WithController(&PrivateController{})
 
 	if err := grove.
 		NewApp("authenticator").

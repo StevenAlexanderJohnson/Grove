@@ -14,7 +14,7 @@ func NewScope() *Scope {
 	}
 }
 
-func (s *Scope) UseMiddleware(mw Middleware) *Scope {
+func (s *Scope) WithMiddleware(mw Middleware) *Scope {
 	s.middleware = append(s.middleware, mw)
 	return s
 }
@@ -24,7 +24,7 @@ func (s *Scope) WithRoute(pattern string, handler http.Handler) *Scope {
 	return s
 }
 
-func (s *Scope) AddController(controller IController) *Scope {
+func (s *Scope) WithController(controller IController) *Scope {
 	controller.RegisterRoutes(s.mux)
 	return s
 }

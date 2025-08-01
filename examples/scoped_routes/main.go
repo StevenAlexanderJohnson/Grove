@@ -14,7 +14,7 @@ func main() {
 		NewScope().
 		// Ad-hoc middleware dummy to simulate session token validation
 		// In a real application, this would be replaced with actual session validation logic
-		UseMiddleware(func(next http.Handler) http.Handler {
+		WithMiddleware(func(next http.Handler) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				sessionCookie, err := r.Cookie("session_token")
 				if err != nil || sessionCookie == nil || sessionCookie.Value == "" {
@@ -29,11 +29,11 @@ func main() {
 				next.ServeHTTP(w, r.WithContext(tokenContext))
 			})
 		}).
-		AddController(&PrivateController{})
+		WithController(&PrivateController{})
 
 	publicScope := grove.
 		NewScope().
-		AddController(&PublicController{})
+		WithController(&PublicController{})
 
 	app := grove.
 		NewApp("scoped_routes").
