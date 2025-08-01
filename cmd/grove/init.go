@@ -92,21 +92,21 @@ func initializeProject(projectName string) error {
 
 func handleInitCommand(args []string) {
 	if len(args) < 1 {
-		println("Usage: init <project-name>")
+		fmt.Println("Usage: init <project-name>")
 		return
 	}
 
 	projectName := args[0]
 
 	if err := initializeFolder(projectName); err != nil {
-		println("Error initializing folder:", err.Error())
+		fmt.Println("Error initializing folder:", err.Error())
 		return
 	}
 
 	if err := initializeProject(projectName); err != nil {
-		println("Error initializing project:", err.Error())
+		fmt.Println("Error initializing project:", err.Error())
 		return
 	}
 
-	println("Grove project initialized successfully:", projectName)
+	fmt.Println("Grove project initialized successfully:", projectName)
 }

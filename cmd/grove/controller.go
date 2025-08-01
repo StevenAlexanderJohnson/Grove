@@ -2,6 +2,7 @@ package main
 
 import (
 	_ "embed"
+	"fmt"
 	"os"
 	"strings"
 	"text/template"
@@ -12,7 +13,7 @@ var controllerTemplate string
 
 func createController(resourceName string) error {
 	// Initialize the controller for Grove project management
-	println("Controller initialized for Grove project management.")
+	fmt.Println("Controller initialized for Grove project management.")
 
 	packageName, err := getModuleName()
 
@@ -49,9 +50,9 @@ func createController(resourceName string) error {
 }
 
 func controllerHelp() {
-	println("Controller command help:")
-	println("Usage: create-controller <controller-path> <resource-model-path> <resource-service-path>")
-	println("This command creates a new controller for Grove project management.")
+	fmt.Println("Controller command help:")
+	fmt.Println("Usage: create-controller <controller-path> <resource-model-path> <resource-service-path>")
+	fmt.Println("This command creates a new controller for Grove project management.")
 }
 
 func handleCreateControllerCommand(args []string) error {
@@ -61,17 +62,17 @@ func handleCreateControllerCommand(args []string) error {
 	}
 
 	if err := handleCreateResourceCommand(args, false, false); err != nil {
-		println("Error creating resource:", err.Error())
+		fmt.Println("Error creating resource:", err.Error())
 		return err
 	}
 
 	resourceName := args[0]
 
 	if err := createController(resourceName); err != nil {
-		println("Error creating controller:", err.Error())
+		fmt.Println("Error creating controller:", err.Error())
 		return err
 	}
 
-	println("Controller created successfully for", resourceName)
+	fmt.Println("Controller created successfully for", resourceName)
 	return nil
 }

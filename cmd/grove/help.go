@@ -1,6 +1,9 @@
 package main
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 func writeHelpMenu() {
 	var builder strings.Builder
@@ -10,5 +13,5 @@ func writeHelpMenu() {
 	builder.WriteString("  init <project-name> - Initialize a new Grove project\n")
 	builder.WriteString("    - <project-name> is the name of the project and will be used as the go mod name if go mod doesn't already exists.\n")
 	builder.WriteString("  help - Show this help menu\n")
-	println(builder.String())
+	fmt.Println(builder.String())
 }

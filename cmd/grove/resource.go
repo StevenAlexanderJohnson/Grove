@@ -48,10 +48,10 @@ func capitalize(name string) string {
 }
 
 func resourceHelp() {
-	println("Resource command help:")
-	println("Usage: create-resource <resource-name> [<resource-field-name>:<go type> ...]")
-	println("The CodeGen will use the field names as provided, so lower case names will not be exported.")
-	println("This command creates a new resource for Grove project management.")
+	fmt.Println("Resource command help:")
+	fmt.Println("Usage: create-resource <resource-name> [<resource-field-name>:<go type> ...]")
+	fmt.Println("The CodeGen will use the field names as provided, so lower case names will not be exported.")
+	fmt.Println("This command creates a new resource for Grove project management.")
 }
 
 func parseResourceFields(args []string) map[string]string {
@@ -59,7 +59,7 @@ func parseResourceFields(args []string) map[string]string {
 	for _, arg := range args {
 		parts := strings.Split(arg, ":")
 		if len(parts) != 2 {
-			println("Invalid field format:", arg)
+			fmt.Println("Invalid field format:", arg)
 			continue
 		}
 		fields[parts[0]] = parts[1]
@@ -71,7 +71,7 @@ func parseResourceFields(args []string) map[string]string {
 // Returns an error if go.mod does not exist or is not formatted correctly.
 func getModuleName() (string, error) {
 	if _, err := os.Stat("go.mod"); os.IsNotExist(err) {
-		println("Error: This command must be run in a Grove project directory with a go.mod file.")
+		fmt.Println("Error: This command must be run in a Grove project directory with a go.mod file.")
 		return "", err
 	}
 
@@ -123,7 +123,7 @@ func createModel(resourceName string, fields map[string]string) error {
 	if err := tmpl.Execute(modelFile, templateData); err != nil {
 		return fmt.Errorf("failed to execute model template: %w", err)
 	}
-	println("Model created successfully at", resourcePath)
+	fmt.Println("Model created successfully at", resourcePath)
 
 	return nil
 }
@@ -135,7 +135,7 @@ func createRepo(resourceName string, moduleName string) error {
 	if moduleName == "" {
 		return ErrResourceModuleNotFound
 	}
-	println("Creating repository for resource:", resourceName)
+	fmt.Println("Creating repository for resource:", resourceName)
 
 	templateData := map[string]interface{}{
 		"ModuleName":   moduleName,
@@ -156,7 +156,7 @@ func createRepo(resourceName string, moduleName string) error {
 	if err := tmpl.Execute(repoFile, templateData); err != nil {
 		return fmt.Errorf("failed to execute repo template: %w", err)
 	}
-	println("Repository created successfully at", repoPath)
+	fmt.Println("Repository created successfully at", repoPath)
 	return nil
 }
 
@@ -167,7 +167,7 @@ func createService(resourceName string, moduleName string) error {
 	if moduleName == "" {
 		return ErrResourceModuleNotFound
 	}
-	println("Creating service for resource:", resourceName)
+	fmt.Println("Creating service for resource:", resourceName)
 
 	templateData := map[string]interface{}{
 		"ModuleName":   moduleName,
@@ -188,7 +188,7 @@ func createService(resourceName string, moduleName string) error {
 	if err := tmpl.Execute(serviceFile, templateData); err != nil {
 		return fmt.Errorf("failed to execute service template: %w", err)
 	}
-	println("Service created successfully at", servicePath)
+	fmt.Println("Service created successfully at", servicePath)
 	return nil
 }
 
@@ -203,27 +203,26 @@ func handleCreateResourceCommand(args []string, noRepo bool, noService bool) err
 	}
 	// Check if the first argument is a valid resource name
 	if args[0] == "" {
-		println("Error: Resource name must be provided.")
+		fmt.Println("Error: Resource name must be provided.")
 		return ErrResourceNoNameProvided
 	} else if isPrivate(args[0]) {
-		println("Error: Resource name must be public (start with an uppercase letter).")
+		fmt.Println("Error: Resource name must be public (start with an uppercase letter).")
 		return fmt.Errorf("%w: %v", ErrResourceIsPrivate, args[0])
 	}
 
 	moduleName, err := getModuleName()
 	if err != nil {
-		println("Error reading go.mod:", err.Error())
+		fmt.Println("Error reading go.mod:", err.Error())
 		return fmt.Errorf("%w: %v", ErrResourceModuleNotFound, err)
 	}
 
 	resourceName := args[0]
 
 	if err := createModel(resourceName, parseResourceFields(args[1:])); err != nil {
-		println("Error creating resource:", err.Error())
+		fmt.Println("Error creating resource:", err.Error())
 		return fmt.Errorf("%w: %v", ErrResourceCreationFailed, err)
 	}
 
-	fmt.Println(noRepo, noService)
 	if !noRepo {
 		if err := createRepo(resourceName, moduleName); err != nil {
 			return fmt.Errorf("%w: %v", ErrResourceRepoCreationFailed, err)
@@ -235,6 +234,6 @@ func handleCreateResourceCommand(args []string, noRepo bool, noService bool) err
 		}
 	}
 
-	println("Resource created successfully:", resourceName)
+	fmt.Println("Resource created successfully:", resourceName)
 	return nil
 }
