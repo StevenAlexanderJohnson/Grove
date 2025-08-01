@@ -1,6 +1,7 @@
 package controllers
 
 import (
+    "net/http"
     "{{.ProjectName}}/internal/models"
     "{{.ProjectName}}/internal/services"
 )
@@ -15,31 +16,87 @@ func New{{.ResourceName}}Controller(service *services.{{.ResourceName}}Service) 
     }
 }
 
-func (c *{{.ResourceName}}Controller) Create(data *models.{{.ResourceName}}) (*models.{{.ResourceName}}, error) {
+func (c *{{.ResourceName}}Controller) RegisterRoutes(mux *http.ServeMux) {
+    mux.HandleFunc("POST", "/{{.ResourceName}}", c.Create)
+    mux.HandleFunc("GET", "/{{.ResourceName}}", c.GetAll)
+    mux.HandleFunc("GET", "/{{.ResourceName}}/{id}", c.GetByID)
+    mux.HandleFunc("PUT", "/{{.ResourceName}}/{id}", c.Update)
+    mux.HandleFunc("DELETE", "/{{.ResourceName}}/{id}", c.Delete)
+}
+
+func (c *{{.ResourceName}}Controller) Create(w http.ResponseWriter, r *http.Request) {
+    data, err := grove.ParseJsonBodyFromRequest[*models.{{.ResourceName}}](r)
+    if err != nil {
+        grove.WriteErrorToResponse(w, http.StatusBadRequest, err.Error())
+        return
+    }
     newData, err := c.service.Create(data)
     if err != nil {
-        return nil, err
+        grove.WriteErrorToResponse(w, http.StatusInternalServerError, err.Error())
+        return
     }
-    return newData, nil
+    if err := grove.WriteJsonBodyToResponse(w, newData); err != nil {
+        grove.WriteErrorToResponse(w, http.StatusInternalServerError, err.Error())
+        return
+    }
 }
 
-func (c *{{.ResourceName}}Controller) GetAll() ([]models.{{.ResourceName}}, error) {
+func (c *{{.ResourceName}}Controller) GetAll(w http.ResponseWriter, r *http.Request) {
     items, err := c.service.List()
     if err != nil {
-        return nil, err
+        grove.WriteErrorToResponse(w, http.StatusInternalServerError, err.Error())
+        return
     }
-    return items, nil
+    if err := grove.WriteJsonBodyToResponse(w, items); err != nil {
+        grove.WriteErrorToResponse(w, http.StatusInternalServerError, err.Error())
+        return
+    }
 }
 
-func (c *{{.ResourceName}}Controller) GetByID(id int) (*models.{{.ResourceName}}, error) {
+func (c *{{.ResourceName}}Controller) GetByID(w http.ResponseWriter, r *http.Request) {
+    id := r.PathValue("id")
+    if id == "" {
+        grove.WriteErrorToResponse(w, http.StatusBadRequest, "ID is required")
+        return
+    }
+    id, err := strconv.Atoi(id)
+    if err != nil {
+        grove.WriteErrorToResponse(w, http.StatusBadRequest, "Invalid ID format")
+        return
+    }
+
     item, err := c.service.Get(id)
     if err != nil {
-        return nil, err
+        grove.WriteErrorToResponse(w, http.StatusInternalServerError, err.Error())
+        return
     }
-    return item, nil
+    if item == nil {
+        grove.WriteErrorToResponse(w, http.StatusNotFound, "Item not found")
+        return
+    }
+    if err := grove.WriteJsonBodyToResponse(w, item); err != nil {
+        grove.WriteErrorToResponse(w, http.StatusInternalServerError, err.Error())
+        return
+    }
 }
 
-func (c *{{.ResourceName}}Controller) Update(id int, data *models.{{.ResourceName}}) (*models.{{.ResourceName}}, error) {
+func (c *{{.ResourceName}}Controller) Update(w http.ResponseWriter, r *http.Request) {
+    id := r.PathValue("id")
+    if id == "" {
+        grove.WriteErrorToResponse(w, http.StatusBadRequest, "ID is required")
+        return
+    }
+    id, err := strconv.Atoi(id)
+    if err != nil {
+        grove.WriteErrorToResponse(w, http.StatusBadRequest, "Invalid ID format")
+        return
+    }
+
+    data, err := grove.ParseJsonBodyFromRequest[*models.{{.ResourceName}}](r)
+    if err != nil {
+        grove.WriteErrorToResponse(w, http.StatusBadRequest, err.Error())
+        return
+    }
     updatedData, err := c.service.Update(data, id)
     if err != nil {
         return nil, err
@@ -47,6 +104,22 @@ func (c *{{.ResourceName}}Controller) Update(id int, data *models.{{.ResourceNam
     return updatedData, nil
 }
 
-func (c *{{.ResourceName}}Controller) Delete(id int) error {
-    return c.service.Delete(id)
+func (c *{{.ResourceName}}Controller) Delete(w http.ResponseWriter, r *http.Request) {
+    idString := r.PathValue("id")
+    if idString == "" {
+        grove.WriteErrorToResponse(w, http.StatusBadRequest, "ID is required")
+        return
+    }
+
+    id, err := strconv.Atoi(idString)
+    if err != nil {
+        grove.WriteErrorToResponse(w, http.StatusBadRequest, "Invalid ID format")
+        return
+    }
+
+    if err := c.service.Delete(id); err != nil {
+        grove.WriteErrorToResponse(w, http.StatusInternalServerError, err.Error())
+        return
+    }
+    grove.WriteJsonBodyToResponse(w, nil)
 }
