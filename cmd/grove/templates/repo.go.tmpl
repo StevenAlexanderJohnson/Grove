@@ -1,0 +1,36 @@
+package repositories
+
+import (
+    "errors"
+    "{{.ModuleName}}/internal/models"
+)
+
+type {{.ResourceName}}Repository struct{
+    // Add the necessary db connection or ORM client here
+}
+
+func New{{.ResourceName}}Repository(/* db connection or ORM client */) *{{.ResourceName}}Repository {
+    return &{{.ResourceName}}Repository{
+        // Initialize the db connection or ORM client here
+    }
+}
+
+func (r *{{.ResourceName}}Repository) Create(data *models.{{.ResourceName}}) (*models.{{.ResourceName}}, error) {
+    return nil, errors.New("not implemented")
+}
+
+func (r *{{.ResourceName}}Repository) Get(id int) (*models.{{.ResourceName}}, error) {
+    return &models.{{.ResourceName}}{}, errors.New("not implemented")
+}
+
+func (r *{{.ResourceName}}Repository) GetAll() ([]models.{{.ResourceName}}, error) {
+    return nil, errors.New("not implemented")
+}
+
+func (r *{{.ResourceName}}Repository) Update(data *models.{{.ResourceName}}, id int) (*models.{{.ResourceName}}, error) {
+    return nil, errors.New("not implemented")
+}
+
+func (r *{{.ResourceName}}Repository) Delete(id int) error {
+    return errors.New("not implemented")
+}

@@ -9,15 +9,25 @@ import (
 	"text/template"
 )
 
+var (
+	ErrResourceInvalidArguments      = fmt.Errorf("invalid arguments for create-resource command")
+	ErrResourceNoFieldsProvided      = fmt.Errorf("no fields provided for resource")
+	ErrResourceNoNameProvided        = fmt.Errorf("no resource name provided")
+	ErrResourceModuleNotFound        = fmt.Errorf("go.mod file not found or not formatted correctly")
+	ErrResourceCreationFailed        = fmt.Errorf("failed to create resource")
+	ErrResourceRepoCreationFailed    = fmt.Errorf("failed to create repository for resource")
+	ErrResourceServiceCreationFailed = fmt.Errorf("failed to create service for resource")
+	ErrResourceIsPrivate             = fmt.Errorf("resource name must be public (start with an uppercase letter)")
+)
+
 //go:embed templates/model.go.tmpl
 var modelTemplate string
 
-func capitalize(s string) string {
-	if len(s) == 0 {
-		return s
-	}
-	return strings.ToUpper(s[:1]) + s[1:]
-}
+//go:embed templates/service.go.tmpl
+var serviceTemplate string
+
+//go:embed templates/repo.go.tmpl
+var repoTemplate string
 
 func isPrivate(name string) bool {
 	if name == "" {
@@ -27,15 +37,21 @@ func isPrivate(name string) bool {
 	return name[0] >= 'a' && name[0] <= 'z'
 }
 
+func capitalize(name string) string {
+	if len(name) == 0 {
+		return name
+	}
+	if name[0] >= 'a' && name[0] <= 'z' {
+		return string(name[0]-32) + name[1:]
+	}
+	return name
+}
+
 func resourceHelp() {
 	println("Resource command help:")
 	println("Usage: create-resource <resource-name> [<resource-field-name>:<go type> ...]")
 	println("The CodeGen will use the field names as provided, so lower case names will not be exported.")
 	println("This command creates a new resource for Grove project management.")
-}
-
-func createRepo(resourceName string, moduleName string) error {
-	return fmt.Errorf("not implemented")
 }
 
 func parseResourceFields(args []string) map[string]string {
@@ -91,7 +107,10 @@ func createModel(resourceName string, fields map[string]string) error {
 		"ResourceFields": fields,
 	}
 
-	tmpl, err := template.New("model").Parse(modelTemplate)
+	tmpl, err := template.New("model").Funcs(template.FuncMap{
+		"isPrivate":  isPrivate,
+		"capitalize": capitalize,
+	}).Parse(modelTemplate)
 	if err != nil {
 		return fmt.Errorf("failed to parse model template: %w", err)
 	}
@@ -109,32 +128,113 @@ func createModel(resourceName string, fields map[string]string) error {
 	return nil
 }
 
-func handleCreateResourceCommand(args []string, noRepo bool) {
+func createRepo(resourceName string, moduleName string) error {
+	if resourceName == "" {
+		return ErrResourceNoNameProvided
+	}
+	if moduleName == "" {
+		return ErrResourceModuleNotFound
+	}
+	println("Creating repository for resource:", resourceName)
+
+	templateData := map[string]interface{}{
+		"ModuleName":   moduleName,
+		"ResourceName": resourceName,
+	}
+
+	tmpl, err := template.New("repo").Parse(repoTemplate)
+	if err != nil {
+		return fmt.Errorf("failed to parse repo template: %w", err)
+	}
+	repoPath := "internal/repositories/" + resourceName + ".go"
+	repoFile, err := os.Create(repoPath)
+	if err != nil {
+		return fmt.Errorf("failed to create repo file: %w", err)
+	}
+	defer repoFile.Close()
+
+	if err := tmpl.Execute(repoFile, templateData); err != nil {
+		return fmt.Errorf("failed to execute repo template: %w", err)
+	}
+	println("Repository created successfully at", repoPath)
+	return nil
+}
+
+func createService(resourceName string, moduleName string) error {
+	if resourceName == "" {
+		return ErrResourceNoNameProvided
+	}
+	if moduleName == "" {
+		return ErrResourceModuleNotFound
+	}
+	println("Creating service for resource:", resourceName)
+
+	templateData := map[string]interface{}{
+		"ModuleName":   moduleName,
+		"ResourceName": resourceName,
+	}
+
+	tmpl, err := template.New("service").Parse(serviceTemplate)
+	if err != nil {
+		return fmt.Errorf("failed to parse service template: %w", err)
+	}
+	servicePath := "internal/services/" + resourceName + ".go"
+	serviceFile, err := os.Create(servicePath)
+	if err != nil {
+		return fmt.Errorf("failed to create service file: %w", err)
+	}
+	defer serviceFile.Close()
+
+	if err := tmpl.Execute(serviceFile, templateData); err != nil {
+		return fmt.Errorf("failed to execute service template: %w", err)
+	}
+	println("Service created successfully at", servicePath)
+	return nil
+}
+
+func handleCreateResourceCommand(args []string, noRepo bool, noService bool) error {
 	if len(args) < 2 {
 		resourceHelp()
-		return
+		return ErrResourceInvalidArguments
 	}
 	if (args[0] == "help" || args[0] == "--help") && len(args) == 1 {
 		resourceHelp()
-		return
+		return nil
+	}
+	// Check if the first argument is a valid resource name
+	if args[0] == "" {
+		println("Error: Resource name must be provided.")
+		return ErrResourceNoNameProvided
+	} else if isPrivate(args[0]) {
+		println("Error: Resource name must be public (start with an uppercase letter).")
+		return fmt.Errorf("%w: %v", ErrResourceIsPrivate, args[0])
 	}
 
 	moduleName, err := getModuleName()
 	if err != nil {
 		println("Error reading go.mod:", err.Error())
-		return
+		return fmt.Errorf("%w: %v", ErrResourceModuleNotFound, err)
 	}
 
 	resourceName := args[0]
 
 	if err := createModel(resourceName, parseResourceFields(args[1:])); err != nil {
 		println("Error creating resource:", err.Error())
-		return
+		return fmt.Errorf("%w: %v", ErrResourceCreationFailed, err)
 	}
 
+	fmt.Println(noRepo, noService)
 	if !noRepo {
 		if err := createRepo(resourceName, moduleName); err != nil {
-
+			return fmt.Errorf("%w: %v", ErrResourceRepoCreationFailed, err)
 		}
 	}
+	if !noService {
+		if err := createService(resourceName, moduleName); err != nil {
+			return fmt.Errorf("%w: %v", ErrResourceServiceCreationFailed, err)
+		}
+	}
+
+	println("Resource created successfully:", resourceName)
+	return nil
 }

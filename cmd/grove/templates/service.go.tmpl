@@ -1,0 +1,35 @@
+package services
+
+import (
+    "{{.ModuleName}}/internal/models"
+    "{{.ModuleName}}/internal/repositories"
+)
+
+type {{.ResourceName}}Service struct {
+    repo repositories.{{.ResourceName}}Repository
+}
+
+func New{{.ResourceName}}Service(repo repositories.{{.ResourceName}}Repository) *{{.ResourceName}}Service {
+    return &{{.ResourceName}}Service{repo: repo}
+}
+
+func (s *{{.ResourceName}}Service) Create(data *models.{{.ResourceName}}) (*models.{{.ResourceName}}, error) {
+    return s.repo.Create(data)
+}
+
+func (s *{{.ResourceName}}Service) Get(id int) (*models.{{.ResourceName}}, error) {
+    return s.repo.Get(id)
+}
+
+func (s *{{.ResourceName}}Service) List() ([]models.{{.ResourceName}}, error) {
+    return s.repo.GetAll()
+}
+
+func (s *{{.ResourceName}}Service) Update(data *models.{{.ResourceName}}, id int) (*models.{{.ResourceName}}, error) {
+    return s.repo.Update(data, id)
+}
+
+func (s *{{.ResourceName}}Service) Delete(id int) error {
+    return s.repo.Delete(id)
+}
+

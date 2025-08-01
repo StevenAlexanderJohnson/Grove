@@ -1,23 +1,21 @@
-package {{.Package}}
+package controllers
 
 import (
-    "errors"
     "{{.ProjectName}}/internal/models"
-    "{{.ProjectName}}/internal/repositories"
     "{{.ProjectName}}/internal/services"
 )
 
 type {{.ResourceName}}Controller struct {
-    service *{{.ResourceName}}Service
+    service *services.{{.ResourceName}}Service
 }
 
-func New{{.ResourceName}}Controller(service *{{.ResourceName}}Service) *{{.ResourceName}}Controller {
+func New{{.ResourceName}}Controller(service *services.{{.ResourceName}}Service) *{{.ResourceName}}Controller {
     return &{{.ResourceName}}Controller{
         service: service,
     }
 }
 
-func (c *{{.ResourceName}}Controller) Create(data *{{.ResourceName}}) (*{{.ResourceName}}, error) {
+func (c *{{.ResourceName}}Controller) Create(data *models.{{.ResourceName}}) (*models.{{.ResourceName}}, error) {
     newData, err := c.service.Create(data)
     if err != nil {
         return nil, err
@@ -25,24 +23,24 @@ func (c *{{.ResourceName}}Controller) Create(data *{{.ResourceName}}) (*{{.Resou
     return newData, nil
 }
 
-func (c *{{.ResourceName}}Controller) GetAll() ([]{{.ResourceName}}, error) {
-    items, err := c.service.GetAll()
+func (c *{{.ResourceName}}Controller) GetAll() ([]models.{{.ResourceName}}, error) {
+    items, err := c.service.List()
     if err != nil {
         return nil, err
     }
     return items, nil
 }
 
-func (c *{{.ResourceName}}Controller) GetByID(id int) (*{{.ResourceName}}, error) {
-    item, err := c.service.GetByID(id)
+func (c *{{.ResourceName}}Controller) GetByID(id int) (*models.{{.ResourceName}}, error) {
+    item, err := c.service.Get(id)
     if err != nil {
         return nil, err
     }
     return item, nil
 }
 
-func (c *{{.ResourceName}}Controller) Update(id int, data *{{.ResourceName}}) (*{{.ResourceName}}, error) {
-    updatedData, err := c.service.Update(id, data)
+func (c *{{.ResourceName}}Controller) Update(id int, data *models.{{.ResourceName}}) (*models.{{.ResourceName}}, error) {
+    updatedData, err := c.service.Update(data, id)
     if err != nil {
         return nil, err
     }
