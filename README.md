@@ -30,7 +30,13 @@ Grove is ideal for developers who want a pragmatic starting point for Go web app
 To add Grove to your project, run:
 
 ```sh
-go get github.com/StevenAlexanderJohnson/grove@v0
+go get github.com/StevenAlexanderJohnson/grove@v1.0.2
+```
+
+Optionally you can install the CLI to help with boilerplate generation:
+
+```sh
+go install github.com/StevenAlexanderJohnson/grove@v1.0.2
 ```
 
 Then, import Grove in your Go code:
@@ -57,6 +63,46 @@ func main() {
 }
 ```
 
+## Code Generation
+
+If you installed the Grove CLI you can initialize and generate boilerplate.
+To generate a project go to the folder you want to initialize it within and run:
+
+```sh
+grove init <project_name>
+```
+
+The `project_name` will be used as the module name in `go.mod`.
+It will generate a new folder inside of the directory you ran the command.
+
+Inside is a skeleton project that you can immediately start using.
+Once you're inside of that initialized project you can also use the CLI to generate boilerplate.
+
+The CLI has two commands for generating boilerplate.
+The first is `grove create resource`. This will generate the model, the repository, and service for interacting with the resource.
+
+> It is important to note in order to use the CLI tool you have to be within a project initialized by Grove, or one that uses a similar file structure.
+Because Grove CLI looks for the mod file so it knows what the module is called and can then generate import paths.
+
+Once in the root folder of the initialized project you can run:
+
+```sh
+grove create resource <ResourceName> field1:<go_type> field2:<go_type> ...
+```
+
+It will then generate all the above mentioned files in their respective folders.
+
+
+The second command that grove has for generating boilerplate is `grove create controller`.
+This command will first run `grove create resource` first to generate all of the required files then it will generate a controller with CRUD methods defined.
+
+You can then use this generated controller with ```scope.WithController()``` or ```app.WithController()```.
+
+The command is used exactly like resource but you replace resource with controller:
+
+```sh
+grove create controller <ResourceName> field1:<go_type> field2:<go_type> ...
+```
 
 ## Documentation
 
