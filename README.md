@@ -36,7 +36,7 @@ go get github.com/StevenAlexanderJohnson/grove@v1.0.2
 Optionally you can install the CLI to help with boilerplate generation:
 
 ```sh
-go install github.com/StevenAlexanderJohnson/grove@v1.0.2
+go install github.com/StevenAlexanderJohnson/grove/cmd/grove@v1.0.2
 ```
 
 Then, import Grove in your Go code:
@@ -65,6 +65,12 @@ func main() {
 
 ## Code Generation
 
+While the framework it self is designed to be unopinionated, the CLI is opinionated.
+It is designed to use sensible design patterns that are easy to maintain.
+These include one repository per resource and a service layer for the resource (which allows you to use multiple repositories with a single call).
+
+Of course the CLI is not required to use Grove, but makes it easier generate a lot of boilerplate quickly.
+
 If you installed the Grove CLI you can initialize and generate boilerplate.
 To generate a project go to the folder you want to initialize it within and run:
 
@@ -83,6 +89,8 @@ The first is `grove create resource`. This will generate the model, the reposito
 
 > It is important to note in order to use the CLI tool you have to be within a project initialized by Grove, or one that uses a similar file structure.
 Because Grove CLI looks for the mod file so it knows what the module is called and can then generate import paths.
+It also requires the file structure to be set up before running the command.
+The `grove create` commands will not create the expected folders.
 
 Once in the root folder of the initialized project you can run:
 
@@ -111,9 +119,10 @@ Grove is designed to be simple, explicit, and unopinionated. You are encouraged 
 ### Key Concepts
 
 - **Bootstrapping:** Grove helps you set up your project structure and common files, but does not hide or abstract your application logic.
-- **Routing & Scopes:** Use `WithRoute` and `WithScope` to register handlers and organize your routes. Scopes can have their own middleware chains.
+- **Scopes:** Scopes allow you to logically group routes and controllers into one unit. Scopes have their own set of functions for bootstrapping middleware, controllers, and routes.
+- **Routing**: While not necessary, Grove encourages using controllers. Controllers are just structs that implement the `IController` interface and have methods that act as `http.HandlerFunc`. Grove also support just adding a `http.HandlerFunc` directly to a scope or to the app. This is useful for simple functions or adding static files.
 - **Middleware:** Middleware is just a function type. You can compose, chain, and write your own. Grove provides helpers, but you are free to implement your own logic.
-- **Dependency Injection:** Grove includes a simple DI container for wiring dependencies, but you can use your own patterns if you prefer.
+- **Dependency Injection:** Grove includes a simple DI container for wiring dependencies, but you can use your own patterns if you prefer. This DI container is used only within the `ControllerFactory` pattern.
 - **Logging:** Grove provides a pluggable logger interface. You can use the default logger or bring your own.
 - **Authentication:** Secure JWE authentication is available, but you can opt out or replace it.
 
@@ -128,6 +137,7 @@ See the [`examples/`](./examples/) directory for:
 ### Philosophy
 
 Grove does not enforce strict conventions or hide details. You are always in control of your application’s structure and logic. The framework’s goal is to reduce boilerplate and help you get started, not to lock you in.
+The framework works as a simple way to bootstrap applications with a very thin layer around the standard `http/net` package.
 
 ### API Reference
 
