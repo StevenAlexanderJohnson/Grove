@@ -12,4 +12,7 @@ type IController interface {
 	RegisterRoutes(mux *http.ServeMux)
 }
 
+// Type alias for used with `App.WithControllerFactory`.
+// This isn't a recommended method for initializing controller because it can hide errors until runtime,
+// not compile time. It is provided for convenience if you would like to use it.
 type ControllerFactory func(*Dependencies) IController

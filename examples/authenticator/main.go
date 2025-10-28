@@ -28,12 +28,15 @@ func main() {
 	if err := authConfig.Validate(); err != nil {
 		panic("Invalid authenticator configuration")
 	}
-	authenticator := grove.NewAuthenticator[*CustomClaims](authConfig)
+	authenticator, err := grove.NewAuthenticator[*CustomClaims](authConfig)
+	if err != nil {
+		panic(err)
+	}
 
 	logger := grove.NewDefaultLogger("authenticator")
 
 	authScope := grove.
-		NewScope().
+		NewScope("auth").
 		WithMiddleware(grove.DefaultAuthMiddleware(
 			authenticator,
 			logger,

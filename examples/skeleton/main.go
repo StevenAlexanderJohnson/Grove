@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	scope := grove.NewScope().WithRoute("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	scope := grove.NewScope("hello").WithRoute("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello, Grove!"))
 	}))
 

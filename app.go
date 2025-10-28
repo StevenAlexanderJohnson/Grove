@@ -2,6 +2,22 @@ package grove
 
 import "net/http"
 
+// App is the base struct for the application.
+// It implements net/http Handler interface so it can be used with the standard library.
+// That being said it does have a `Run()` function that will start the application.
+// It provides many functions that make bootstrapping your application easier.
+// App uses the builder method to change default values as well bootstrap.
+// App should not be instanced directly. It uses private fields that are set using the builder
+// methods.
+//
+// The private fields within App:
+// - port
+// - mux
+// - middleware
+// - logger
+// - deps
+//
+// All of these fields are provided default values within the `NewApp` function.
 type App struct {
 	port       string
 	mux        *http.ServeMux
@@ -10,6 +26,10 @@ type App struct {
 	deps       *Dependencies
 }
 
+// Constructs the App struct.
+// `appName` is used to set the name of the logger.
+// The rest of the fields are given their default values either from the standard library,
+// the default initializer from Grove, or "8080" for port.
 func NewApp(appName string) *App {
 	return &App{
 		port:       "8080",
@@ -56,7 +76,8 @@ func (app *App) WithMux(mux *http.ServeMux) *App {
 // WithController registers a controller with the application.
 // It calls the RegisterRoutes method of the controller to set up its routes.
 // If the controller is nil, it logs an error and does not register it.
-// Controller routes that are registered directly to the App will use all the middleware registered to the app.
+// Controller routes that are registered directly to the App will use all the
+// middleware registered to the app.
 func (app *App) WithController(controller IController) *App {
 	if controller == nil {
 		app.logger.Error("Controller is nil, cannot register")
@@ -121,7 +142,9 @@ func (app *App) WithMiddleware(mw Middleware) *App {
 // It ensures the path starts and ends with a slash.
 // If the handler is nil, it logs a warning and does not register the route.
 // This method is used to add routes outside of controllers.
-// The it will use all the middleware registered to the app.
+// The routes registered with this method does not have middleware applied.
+// If you want to register routes that have middleware applied you should use
+// a `Scope`.
 func (app *App) WithRoute(path string, handler http.Handler) *App {
 	if path == "" || path[0] != '/' {
 		path = "/" + path
@@ -137,6 +160,11 @@ func (app *App) WithRoute(path string, handler http.Handler) *App {
 	return app
 }
 
+// WithDependencies registers a dependency container.
+// Dependencies are not recommended but provided for convenience.
+// These dependencies will be used when registring controllers with WithControllerFactory.
+// If the passed dependency container is null it will print a warning but will not fail.
+// This function returns a pointer to the app.
 func (app *App) WithDependencies(deps *Dependencies) *App {
 	if deps == nil {
 		app.logger.Warning("Warning: Attempting to set nil dependencies, using existing dependencies")

@@ -15,10 +15,12 @@ type Middleware func(next http.Handler) http.Handler
 
 type requestIDKeyType struct{}
 
+// Key that should be used to pull request ID from the request context.
 var RequestIDKey = requestIDKeyType{}
 
 type authTokenKeyType struct{}
 
+// Key that should be used to pull auth token from the request context.
 var AuthTokenKey = authTokenKeyType{}
 
 // DefaultAuthMiddleware is a middleware that provides default authentication logic.

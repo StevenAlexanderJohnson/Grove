@@ -11,7 +11,7 @@ func main() {
 	logger := grove.NewDefaultLogger("scoped_routes")
 
 	authScope := grove.
-		NewScope().
+		NewScope("auth").
 		// Ad-hoc middleware dummy to simulate session token validation
 		// In a real application, this would be replaced with actual session validation logic
 		WithMiddleware(func(next http.Handler) http.Handler {
@@ -32,7 +32,7 @@ func main() {
 		WithController(&PrivateController{})
 
 	publicScope := grove.
-		NewScope().
+		NewScope("scope").
 		WithController(&PublicController{})
 
 	app := grove.

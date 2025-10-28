@@ -15,14 +15,22 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+// Config used for the `Authenticator` provided by Grove.
+// These values are used for generating JWEs.
 type AuthenticatorConfig struct {
+	// The Private key that is used to encrypt the JWT
 	JWEPrivateKey *rsa.PrivateKey
-	Lifetime      time.Duration
-	Issuer        string
-	Audience      []string
-	Key           string
+	// Used to calculate the expiration date of the JWT
+	Lifetime time.Duration
+	// Issuer field for the generated JWT
+	Issuer string
+	// Audience field for the generated JWT
+	Audience []string
+	// The key used to sign the JWT
+	Key string
 }
 
+// Initializes the `AuthenticatorConfig`.
 func NewAuthenticatorConfig(jwePrivateKey *rsa.PrivateKey, lifetime time.Duration, issuer string, audience []string, key string) *AuthenticatorConfig {
 	return &AuthenticatorConfig{
 		JWEPrivateKey: jwePrivateKey,
@@ -33,6 +41,9 @@ func NewAuthenticatorConfig(jwePrivateKey *rsa.PrivateKey, lifetime time.Duratio
 	}
 }
 
+// Function that validates the AuthenticatorConfig.
+// If any values are missing it will return an error.
+// If it is valid it will return nil.
 func (config *AuthenticatorConfig) Validate() error {
 	if config.JWEPrivateKey == nil {
 		return fmt.Errorf("JWEPrivateKey is required")
@@ -52,6 +63,18 @@ func (config *AuthenticatorConfig) Validate() error {
 	return nil
 }
 
+// Loads the AuthenticatorConfig values from ENV variables.
+//
+// The list of ENV variables that need to be set are as follows:
+//
+//   - JWT_PRIVATE_KEY_PATH
+//     Path to the PEM file.
+//   - JWT_LIFETIME
+//     The integer value in terms of minutes.
+//   - JWT_ISSUER
+//   - JWT_AUDIENCE
+//   - JWT_SECRET
+//     This is just a string value.
 func LoadAuthenticatorConfigFromEnv() (*AuthenticatorConfig, error) {
 	jwePem, err := os.ReadFile(os.Getenv("JWT_PRIVATE_KEY_PATH"))
 	if err != nil {
@@ -104,15 +127,23 @@ func LoadAuthenticatorConfigFromEnv() (*AuthenticatorConfig, error) {
 	jwtConfig := NewAuthenticatorConfig(rsaKey, lifetime, issuer, audience, jwtSecret)
 
 	return jwtConfig, nil
-
 }
 
-func NewAuthenticator[T jwt.Claims](config *AuthenticatorConfig) *Authenticator[T] {
+// Initializes the Authenticator.
+// It takes a type argument that implements `jwt.Claims` in order to know how to parse and
+// create JWTs.
+// If the provided configuration is nil it will return an error.
+func NewAuthenticator[T jwt.Claims](config *AuthenticatorConfig) (*Authenticator[T], error) {
+	if config == nil {
+		return nil, fmt.Errorf("Tried to initialize Authenticator with nil configuration.")
+	}
 	return &Authenticator[T]{
 		AuthenticatorConfig: config,
-	}
+	}, nil
 }
 
+// Authenticator will be able to create and parse JWE tokens.
+// To initialize it you have to provide the AuthenticatorConfig.
 type Authenticator[T jwt.Claims] struct {
 	*AuthenticatorConfig
 }
@@ -217,7 +248,6 @@ func (a *Authenticator[T]) VerifyToken(token string, claims T) (T, error) {
 		},
 		parserOptions...,
 	)
-
 	if err != nil {
 		return claims, fmt.Errorf("an error occurred while parsing JWT: %v", err)
 	}
