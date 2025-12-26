@@ -24,7 +24,11 @@ func NewApp(appName string) *App {
 // It allows the App to be used as a handler in an HTTP server.
 // It delegates the request handling to the ServeMux.
 func (app *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	app.mux.ServeHTTP(w, r)
+	var handler http.Handler = app.mux
+	for _, mw := range app.middleware {
+		handler = mw(handler)
+	}
+	handler.ServeHTTP(w, r)
 }
 
 // Run starts to listen the HTTP server on the specified port.
