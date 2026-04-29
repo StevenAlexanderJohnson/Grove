@@ -3,6 +3,7 @@ package grove
 import (
 	"context"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -30,7 +31,15 @@ func DefaultAuthMiddleware[T jwt.Claims](authenticator *Authenticator[T], logger
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Implement default authentication logic here
 			// For example, check for a valid token in the request header
-			token := r.Header.Get("Authorization")
+			token := ""
+
+			authHeader := strings.TrimSpace(r.Header.Get("Authorization"))
+			if authHeader != "" {
+				parts := strings.SplitN(token, " ", 2)
+				if len(parts) == 2 || strings.EqualFold(parts[0], "Bearer") {
+					token = parts[1]
+				}
+			}
 			if token == "" {
 				sessionCookie, err := r.Cookie("session_token")
 				if err != nil || sessionCookie == nil || sessionCookie.Value == "" {
@@ -40,6 +49,7 @@ func DefaultAuthMiddleware[T jwt.Claims](authenticator *Authenticator[T], logger
 				}
 				token = sessionCookie.Value
 			}
+
 			claims := claimsFactory()
 			// Validate the token using the authenticator
 			parsedClaims, err := authenticator.VerifyToken(token, claims)
