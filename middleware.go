@@ -35,7 +35,7 @@ func DefaultAuthMiddleware[T jwt.Claims](authenticator *Authenticator[T], logger
 
 			authHeader := strings.TrimSpace(r.Header.Get("Authorization"))
 			if authHeader != "" {
-				parts := strings.SplitN(token, " ", 2)
+				parts := strings.SplitN(authHeader, " ", 2)
 				if len(parts) == 2 || strings.EqualFold(parts[0], "Bearer") {
 					token = parts[1]
 				}
