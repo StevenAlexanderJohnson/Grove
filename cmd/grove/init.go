@@ -84,7 +84,7 @@ func initializeProject(projectName string) error {
 		return fmt.Errorf("failed to execute main template: %w", err)
 	}
 
-	if err := exec.Command("go", "get", "github.com/StevenAlexanderJohnson/grove@v0").Run(); err != nil {
+	if err := exec.Command("go", "get", "github.com/StevenAlexanderJohnson/grove@v1.0.4").Run(); err != nil {
 		return fmt.Errorf("failed to tidy go module: %w", err)
 	}
 	return nil
