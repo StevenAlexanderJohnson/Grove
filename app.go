@@ -44,7 +44,13 @@ func NewApp(appName string) *App {
 // It allows the App to be used as a handler in an HTTP server.
 // It delegates the request handling to the ServeMux.
 func (app *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	app.mux.ServeHTTP(w, r)
+	var handler http.Handler = app.mux
+
+	for i := len(app.middleware) - 1; i >= 0; i-- {
+		handler = app.middleware[i](handler)
+	}
+
+	handler.ServeHTTP(w, r)
 }
 
 // Run starts to listen the HTTP server on the specified port.
@@ -146,17 +152,17 @@ func (app *App) WithMiddleware(mw Middleware) *App {
 // If you want to register routes that have middleware applied you should use
 // a `Scope`.
 func (app *App) WithRoute(path string, handler http.Handler) *App {
-	if path == "" || path[0] != '/' {
-		path = "/" + path
-	}
-	if path[len(path)-1] != '/' {
-		path += "/"
-	}
-	if handler == nil {
-		app.logger.Warning("Warning: Attempting to register a nil handler at", path)
+	if path == "" {
+		app.logger.Warning("Attempting to add a route with an empty pattern to app.")
 		return app
 	}
-	app.mux.Handle(path, http.StripPrefix(path[:len(path)-1], handler))
+
+	if handler == nil {
+		app.logger.Warning("Attempting to register a nil handler at", path)
+		return app
+	}
+
+	app.mux.Handle(path, handler)
 	return app
 }
 
@@ -174,21 +180,39 @@ func (app *App) WithDependencies(deps *Dependencies) *App {
 	return app
 }
 
+func cleanScopePath(path string) string {
+	if path == "" {
+		return "/"
+	}
+
+	if path[0] != '/' {
+		path = "/" + path
+	}
+
+	if len(path) > 1 && path[len(path)-1] == '/' {
+		path = path[:len(path)-1]
+	}
+
+	return path
+}
+
 // WithScope registers a scope at the specified path.
 // It ensures the path starts and ends with a slash.
 // If the scope is nil, it logs a warning and does not register the scope.
 // This method is used to add scopes that can be used for grouping routes or resources.
 func (app *App) WithScope(path string, scope *Scope) *App {
-	if path == "" || path[0] != '/' {
-		path = "/" + path
-	}
-	if path[len(path)-1] != '/' {
-		path += "/"
-	}
+	path = cleanScopePath(path)
+
 	if scope == nil {
 		app.logger.Warning("Warning: Attempting to register a nil scope at", path)
 		return app
 	}
-	app.mux.Handle(path, http.StripPrefix(path[:len(path)-1], scope))
+
+	if path == "/" {
+		app.mux.Handle("/", scope)
+		return app
+	}
+
+	app.mux.Handle(path+"/", http.StripPrefix(path, scope))
 	return app
 }
