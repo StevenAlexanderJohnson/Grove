@@ -18,6 +18,9 @@ import (
 // Config used for the `Authenticator` provided by Grove.
 // These values are used for generating JWEs.
 type AuthenticatorConfig struct {
+	// Boolean flag to determine if JWEPrivateKey is required or if
+	// GenerateToken, ParseToken, VerifyToken should use encryption.
+	CanEncrypt bool
 	// The Private key that is used to encrypt the JWT
 	JWEPrivateKey *rsa.PrivateKey
 	// Used to calculate the expiration date of the JWT
@@ -31,8 +34,9 @@ type AuthenticatorConfig struct {
 }
 
 // Initializes the `AuthenticatorConfig`.
-func NewAuthenticatorConfig(jwePrivateKey *rsa.PrivateKey, lifetime time.Duration, issuer string, audience []string, key string) *AuthenticatorConfig {
+func NewAuthenticatorConfig(canEncrypt bool, jwePrivateKey *rsa.PrivateKey, lifetime time.Duration, issuer string, audience []string, key string) *AuthenticatorConfig {
 	return &AuthenticatorConfig{
+		CanEncrypt:    canEncrypt,
 		JWEPrivateKey: jwePrivateKey,
 		Lifetime:      lifetime,
 		Issuer:        issuer,
@@ -45,7 +49,7 @@ func NewAuthenticatorConfig(jwePrivateKey *rsa.PrivateKey, lifetime time.Duratio
 // If any values are missing it will return an error.
 // If it is valid it will return nil.
 func (config *AuthenticatorConfig) Validate() error {
-	if config.JWEPrivateKey == nil {
+	if config.CanEncrypt && config.JWEPrivateKey == nil {
 		return fmt.Errorf("JWEPrivateKey is required")
 	}
 	if config.Lifetime <= 0 {
@@ -76,22 +80,31 @@ func (config *AuthenticatorConfig) Validate() error {
 //   - JWT_SECRET
 //     This is just a string value.
 func LoadAuthenticatorConfigFromEnv() (*AuthenticatorConfig, error) {
-	jwePem, err := os.ReadFile(os.Getenv("JWT_PRIVATE_KEY_PATH"))
+	canEncrypt, err := strconv.ParseBool(os.Getenv("JWT_CAN_ENCRYPT"))
 	if err != nil {
-		return nil, fmt.Errorf("an error occurred while reading JWE private key: %v", err)
-	}
-	block, _ := pem.Decode(jwePem)
-	if block == nil {
-		return nil, fmt.Errorf("an error occurred while decoding JWE private key")
+		return nil, fmt.Errorf("an error occurred while parsing JWT can encrypt")
 	}
 
-	privateKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
-	if err != nil {
-		return nil, fmt.Errorf("an error occurred while parsing JWE private key: %v", err)
-	}
-	rsaKey, ok := privateKey.(*rsa.PrivateKey)
-	if !ok {
-		return nil, fmt.Errorf("an error occurred while converting JWE private key to RSA: %v", err)
+	var rsaKey *rsa.PrivateKey
+	if canEncrypt {
+		jwePem, err := os.ReadFile(os.Getenv("JWT_PRIVATE_KEY_PATH"))
+		if err != nil {
+			return nil, fmt.Errorf("an error occurred while reading JWE private key: %v", err)
+		}
+		block, _ := pem.Decode(jwePem)
+		if block == nil {
+			return nil, fmt.Errorf("an error occurred while decoding JWE private key")
+		}
+
+		privateKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+		if err != nil {
+			return nil, fmt.Errorf("an error occurred while parsing JWE private key: %v", err)
+		}
+		if r, ok := privateKey.(*rsa.PrivateKey); !ok {
+			return nil, fmt.Errorf("an error occurred while converting JWE private key to RSA: %v", err)
+		} else {
+			rsaKey = r
+		}
 	}
 
 	lifetimeSetting := os.Getenv("JWT_LIFETIME")
@@ -124,7 +137,7 @@ func LoadAuthenticatorConfigFromEnv() (*AuthenticatorConfig, error) {
 		return nil, fmt.Errorf("JWT_SECRET was not set")
 	}
 
-	jwtConfig := NewAuthenticatorConfig(rsaKey, lifetime, issuer, audience, jwtSecret)
+	jwtConfig := NewAuthenticatorConfig(canEncrypt, rsaKey, lifetime, issuer, audience, jwtSecret)
 
 	return jwtConfig, nil
 }
@@ -191,26 +204,32 @@ func (a *Authenticator[T]) GenerateToken(claims T) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("an error occurred while signing jwt: %v", err)
 	}
-	encrypted, err := a.encryptToken(signedString)
-	if err != nil {
-		return "", fmt.Errorf("an error occurred while encrypting jwt: %v", err)
+	if a.CanEncrypt {
+		encrypted, err := a.encryptToken(signedString)
+		if err != nil {
+			return "", fmt.Errorf("an error occurred while encrypting jwt: %v", err)
+		}
+		signedString = encrypted
 	}
 
-	return encrypted, nil
+	return signedString, nil
 }
 
 // ParseToken decrypts the token and parses it into the provided claims.
 // It does not validate the claims, allowing for custom validation logic to be applied later.
 func (a *Authenticator[T]) ParseToken(token string, claims T) (*jwt.Token, error) {
-	decryptedToken, err := a.decryptToken(token)
-	if err != nil {
-		return nil, fmt.Errorf("an error occurred while decrypting token: %v", err)
+	if a.CanEncrypt {
+		decryptedToken, err := a.decryptToken(token)
+		if err != nil {
+			return nil, fmt.Errorf("an error occurred while decrypting token: %v", err)
+		}
+		token = decryptedToken
 	}
 	// We do not create a list of options because we are disabling all validation then doing manual validation.
 	parsedToken, err := jwt.ParseWithClaims(
-		decryptedToken,
+		token,
 		claims,
-		func(token *jwt.Token) (interface{}, error) {
+		func(token *jwt.Token) (any, error) {
 			return []byte(a.Key), nil
 		},
 		jwt.WithoutClaimsValidation(),
@@ -227,9 +246,12 @@ func (a *Authenticator[T]) ParseToken(token string, claims T) (*jwt.Token, error
 // If the token is valid, it returns the claims; otherwise, it returns an error.
 // This method is used to ensure that the token is valid and can be trusted for authentication.
 func (a *Authenticator[T]) VerifyToken(token string, claims T) (T, error) {
-	decryptedToken, err := a.decryptToken(token)
-	if err != nil {
-		return claims, fmt.Errorf("an error occurred while decrypting token while verifying: %v", err)
+	if a.CanEncrypt {
+		decryptedToken, err := a.decryptToken(token)
+		if err != nil {
+			return claims, fmt.Errorf("an error occurred while decrypting token while verifying: %v", err)
+		}
+		token = decryptedToken
 	}
 
 	parserOptions := make([]jwt.ParserOption, 0)
@@ -241,9 +263,9 @@ func (a *Authenticator[T]) VerifyToken(token string, claims T) (T, error) {
 	parserOptions = append(parserOptions, jwt.WithExpirationRequired())
 
 	parsedToken, err := jwt.ParseWithClaims(
-		decryptedToken,
+		token,
 		claims,
-		func(token *jwt.Token) (interface{}, error) {
+		func(token *jwt.Token) (any, error) {
 			return []byte(a.Key), nil
 		},
 		parserOptions...,

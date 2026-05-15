@@ -5,7 +5,7 @@ import (
 )
 
 // Scope is very similar to `App` except it doesn't have a dependency
-// container, logger, or port.
+// container or port.
 // It should be used to segment your code application to apply middleware
 // to specific routes. It can also be useful just for logical
 // separation. Like `App`, you should not initialize this struct manually
@@ -21,12 +21,17 @@ type Scope struct {
 }
 
 // Initializes a Scope. It sets default values that can be overwritten
-// with the builder functions. The parameter `scopeName` is used to initialize the logger.
-// The logger can be overwritten if you want to reuse an existing logger.
-func NewScope(scopeName string) *Scope {
+// with the builder functions. The parameter `scopeName` is used to initialize the logger if a logger is not provided.
+func NewScope(scopeName string, logger ...ILogger) *Scope {
+	var useLogger ILogger = nil
+	if len(logger) == 0 {
+		useLogger = NewDefaultLogger(scopeName)
+	} else {
+		useLogger = logger[0]
+	}
 	return &Scope{
 		mux:        http.NewServeMux(),
-		logger:     NewDefaultLogger(scopeName),
+		logger:     useLogger,
 		middleware: []Middleware{},
 	}
 }
@@ -42,18 +47,6 @@ func (s *Scope) WithMiddleware(mw Middleware) *Scope {
 	return s
 }
 
-// WithLogger allows you to overwrite the default logger initialized from `NewScope`.
-// This is useful if you want to use an existing logger.
-func (s *Scope) WithLogger(logger ILogger) *Scope {
-	if logger == nil {
-		s.logger.Warning("Warning: Attempting to set a nil scope logger, using existing logger")
-		return s
-	}
-
-	s.logger = logger
-	return s
-}
-
 // WithRoute registers a handler for a specific path.
 // It ensures the path starts and ends with a slash. This means that '/' is valid as well.
 // If the handler is nil, it logs a warning and does not register the route.
@@ -61,22 +54,36 @@ func (s *Scope) WithLogger(logger ILogger) *Scope {
 // All middleware that have been registered for the scope are applied to the route in the
 // order they were registered.
 func (s *Scope) WithRoute(pattern string, handler http.Handler) *Scope {
-	if pattern == "" || pattern[0] != '/' {
-		pattern = "/" + pattern
-	}
-	if pattern[len(pattern)-1] != '/' {
-		pattern += "/"
-	}
-	if handler == nil {
-		s.logger.Warning("Warning: Attempting to add a nil route to scope.")
+	if pattern == "" {
+		s.logger.Warning("Attempting to add a route with an empty pattern to scope.")
 		return s
 	}
 
-	for _, mw := range s.middleware {
-		handler = mw(handler)
+	if handler == nil {
+		s.logger.Warning("Attempting to add a nil route to scope.")
+		return s
+	}
+	s.mux.Handle(pattern, handler)
+	return s
+}
+
+// WithScope registers a nested scope. This is useful if you want a scope like /api but
+// only want to wrap portions of it in middleware. An example of that would be /api/login to not
+// require authentication but /api/users does.
+func (s *Scope) WithScope(path string, scope *Scope) *Scope {
+	path = cleanScopePath(path)
+
+	if scope == nil {
+		s.logger.Warning("Attempting to register a nil scope at", path)
+		return s
 	}
 
-	s.mux.Handle(pattern, handler)
+	if path == "/" {
+		s.mux.Handle("/", scope)
+		return s
+	}
+
+	s.mux.Handle(path+"/", http.StripPrefix(path, scope))
 	return s
 }
 
@@ -97,8 +104,9 @@ func (s *Scope) WithController(controller IController) *Scope {
 
 func (s *Scope) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var handler http.Handler = s.mux
-	for _, mw := range s.middleware {
-		handler = mw(handler)
+
+	for i := len(s.middleware) - 1; i >= 0; i-- {
+		handler = s.middleware[i](handler)
 	}
 
 	handler.ServeHTTP(w, r)

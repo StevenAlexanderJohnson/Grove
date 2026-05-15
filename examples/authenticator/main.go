@@ -48,7 +48,7 @@ func main() {
 		NewApp("authenticator").
 		WithScope("/private/", authScope).
 		WithController(NewHomeController(authenticator, logger)).
-		WithPort("8080").
+		WithPort("8090").
 		Run(); err != nil {
 		panic(err)
 	}
