@@ -30,13 +30,13 @@ Grove is ideal for developers who want a pragmatic starting point for Go web app
 To add Grove to your project, run:
 
 ```sh
-go get github.com/StevenAlexanderJohnson/grove@v1.0.5
+go get github.com/StevenAlexanderJohnson/grove@v1.1.0
 ```
 
 Optionally you can install the CLI to help with boilerplate generation:
 
 ```sh
-go install github.com/StevenAlexanderJohnson/grove/cmd/grove@v1.0.5
+go install github.com/StevenAlexanderJohnson/grove/cmd/grove@v1.1.0
 ```
 
 Then, import Grove in your Go code:
