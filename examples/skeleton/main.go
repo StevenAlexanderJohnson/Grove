@@ -11,7 +11,7 @@ func main() {
 		w.Write([]byte("Hello, Grove!"))
 	}))
 
-	app := grove.NewApp("Skeleton App").WithScope("/", scope)
+	app := grove.NewApp("Skeleton App").WithScope("/", scope).WithPort("8090")
 
 	if err := app.Run(); err != nil {
 		panic(err)

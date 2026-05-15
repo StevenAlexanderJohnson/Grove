@@ -67,6 +67,26 @@ func (s *Scope) WithRoute(pattern string, handler http.Handler) *Scope {
 	return s
 }
 
+// WithScope registers a nested scope. This is useful if you want a scope like /api but
+// only want to wrap portions of it in middleware. An example of that would be /api/login to not
+// require authentication but /api/users does.
+func (s *Scope) WithScope(path string, scope *Scope) *Scope {
+	path = cleanScopePath(path)
+
+	if scope == nil {
+		s.logger.Warning("Attempting to register a nil scope at", path)
+		return s
+	}
+
+	if path == "/" {
+		s.mux.Handle("/", scope)
+		return s
+	}
+
+	s.mux.Handle(path+"/", http.StripPrefix(path, scope))
+	return s
+}
+
 // WithController registers a controller with the application.
 // It calls the RegisterRoutes method of the controller to set up its routes.
 // If the controller is nil, it logs a warning and does not register it.
